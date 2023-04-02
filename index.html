@@ -2,56 +2,148 @@
 <html>
 
 <head>
-    <title>Match It!</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <title>Whack-a-Mole Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
     <script>
-        function showItem(id) {
-            let item = document.getElementById(`${id}c`);
-            if (!item.classList.contains("showItem")) {
-                item.classList.remove("hideItem");
-                item.classList.add("showItem");
-                setTimeout(() => {
-                    //item.classList.remove("showItem");
-                    item.classList.add("hideItem");
-                }, 5000)
-            }
+        $(function () {
 
-        }
+            function set(key, value) { localStorage.setItem(key, value); }
+            function get(key) { return localStorage.getItem(key); }
+            function increase(el) { set(el, parseInt(get(el)) + 1); }
+            function decrease(el) { set(el, parseInt(get(el)) - 1); }
+
+            var toTime = function (nr) {
+                if (nr == '-:-') return nr;
+                else { var n = ' ' + nr / 1000 + ' '; return n.substr(0, n.length - 1) + 's'; }
+            };
+
+            function shuffle(array) {
+                var currentIndex = array.length, temporaryValue, randomIndex;
+                while (0 !== currentIndex) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex -= 1;
+                    temporaryValue = array[currentIndex];
+                    array[currentIndex] = array[randomIndex];
+                    array[randomIndex] = temporaryValue;
+                }
+                return array;
+            };
+
+            function startScreen(text) {
+                $('#g').removeAttr('class').empty();
+                $('.logo').fadeIn(250);
+
+                $('.c1').text(text.substring(0, 1));
+                $('.c2').text(text.substring(1, 2));
+                $('.c3').text(text.substring(2, 3));
+                $('.c4').text(text.substring(3, 4));
+
+                if (text == 'nice') {
+                    $('#status').removeClass();
+                    $('#status').addClass("status-success");
+                    $('#status').text("You Won!, Thanks for finding my friends")
+                    $('.gameIntro').show();
+                } else if (text == 'fail') {
+                    $('#status').removeClass();
+                    $('#status').addClass("status-fail");
+                    $('#status').text("Times Upp! You Lost")
+                    $('.gameIntro').show();
+                }
+
+            };
+
+            $('.logo .card:not(".twist")').on('click', function (e) {
+                $(this).toggleClass('active').siblings().not('.twist').removeClass('active');
+                if ($(e.target).is('.playnow')) { $('.logo .card').last().addClass('active'); }
+            });
+
+            $('.play').on('click', function () {
+                increase('flip_abandoned');
+                $('.info').fadeOut();
+                $('.gameIntro').hide();
+                var difficulty = 'casual',
+                    timer = 10000,
+                    level = $(this).data('level');
+
+                timer *= level * 4;
+
+                $('#g').addClass(difficulty);
+
+                $('.logo').fadeOut(250, function () {
+                    var startGame = $.now(),
+                        obj = [];
+                    for (i = 0; i < level; i++) { obj.push(i); }
+
+                    var shu = shuffle($.merge(obj, obj)),
+                        cardSize = 100 / Math.sqrt(shu.length);
+
+                    for (i = 0; i < shu.length; i++) {
+                        var code = shu[i];
+                        if (code < 10) { code = "0" + code; }
+                        if (code == 30) code = 10;
+                        if (code == 31) code = 21;
+                        $('<div class="card" style="width:' + cardSize + '%;height:' + cardSize + '%;">' +
+                            '<div class="flipper"><div class="f"></div><div class="b" data-f="&#xf0' + code + ';"><img style="width:' + cardSize + '%;height:' + cardSize + '%;" src="./' + code + '.png"></div></div>' +
+                            '</div>').appendTo('#g');
+                    }
+
+                    $('#g .card').on({
+                        'mousedown': function () {
+                            if ($('#g').attr('data-paused') == 1) { return; }
+                            var data = $(this).addClass('active').find('.b').attr('data-f');
+
+                            if ($('#g').find('.card.active').length > 1) {
+                                setTimeout(function () {
+                                    var thisCard = $('#g .active .b[data-f=' + data + ']');
+
+                                    if (thisCard.length > 1) {
+                                        thisCard.parents('.card').toggleClass('active card found').empty(); //yey
+                                        increase('flip_matched');
+
+                                        if (!$('#g .card').length) {
+                                            var time = $.now() - startGame;
+                                            if (get('flip_' + difficulty) == '-:-' || get('flip_' + difficulty) > time) {
+                                                set('flip_' + difficulty, time); // increase best score
+                                            }
+
+                                            startScreen('nice');
+                                        }
+                                    }
+                                    else {
+                                        $('#g .card.active').removeClass('active'); // fail
+                                        increase('flip_wrong');
+                                    }
+                                }, 401);
+                            }
+                        }
+                    });
+
+                    $('<i class="timer"></i>')
+                        .prependTo('#g')
+                        .css({
+                            'animation': 'timer ' + timer + 'ms linear'
+                        })
+                        .one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function (e) {
+                            startScreen('fail');
+                        });
+                });
+            });
+
+        });
     </script>
 </head>
 
 <body>
-    <table>
-        <tr>
-            <td onclick="showItem('00')" id="00">
-                <div class="tileContainer">
-                    <div id="00c" class="tileCover"></div>
-                    <img src="instagram.png">
-                </div>
-            </td>
-            <td id="01">2</td>
-            <td id="02">3</td>
-            <td id="03">4</td>
-        </tr>
-        <tr>
-            <td id="10">5</td>
-            <td id="11">6</td>
-            <td id="12">7</td>
-            <td id="13">8</td>
-        </tr>
-        <tr>
-            <td id="20">9</td>
-            <td id="21">10</td>
-            <td id="22">11</td>
-            <td id="23">12</td>
-        </tr>
-        <tr>
-            <td id="30">13</td>
-            <td id="31">14</td>
-            <td id="32">15</td>
-            <td id="33">16</td>
-        </tr>
-    </table>
+    <div class="gameIntro">
+        <img style="width: 38rem;" src="./findmyfriends.png">
+        <div id="status"></div>
+        <a href="javascript:;" data-level="8" class="play">Start Game</a>
+    </div>
+    <div id="g"></div>
+    <div class="logo">
+    </div>
 </body>
 
 </html>
