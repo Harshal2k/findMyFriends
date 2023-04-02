@@ -282,12 +282,20 @@ a:hover {
 }
 
 .f {
-  background: #16A085;
+  background-image: url(./findmyfriendsReducedOpacity.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-color: #16A085;
   z-index: 1
 }
 
 .b {
-  background: #C0392B;
+  background-image: url(./findmyfriendsReducedOpacity.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-color: #0c0c0c;
   opacity: 0;
   display: flex;
   justify-content: center;
